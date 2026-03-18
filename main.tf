@@ -1,4 +1,4 @@
-# this is for vpc calling variable and all variable mention in variable.tf file.
+# this is day2 for vpc calling variable and all variable mention in variable.tf file.
 
 module "vpc" {
     source           = "./modules/vpc"
