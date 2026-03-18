@@ -7,4 +7,4 @@ variable "instance_type" {}
 
 variable "vpc_cidr" {}
 variable "subnet_cidr" {}
-variable "availability_zone" {}
+#variable "availability_zone" {}

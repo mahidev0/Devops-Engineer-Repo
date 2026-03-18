@@ -1,13 +1,15 @@
-# this is day2 for vpc calling variable and all variable mention in variable.tf file.
+# this is for vpc calling variable and all variable mention in variable.tf file.
 
 module "vpc" {
-  source            = "./modules/vpc"
-  vpc_cidr          = var.vpc_cidr
-  subnet_cidr       = var.subnet_cidr
-  availability_zone = var.availability_zone
+  source = "./modules/vpc"
+
+  aws_region = var.aws_region
+  vpc_cidr            = "10.0.0.0/16"
+  public_subnet_cidr  = "10.0.1.0/24"
+  private_subnet_cidr = "10.0.2.0/24"
+  availability_zone_public  = "ap-south-1a"
+  availability_zone_private = "ap-south-1b"
 }
-
-
 
 # this is caaling ec2
 
@@ -17,10 +19,5 @@ module "ec2" {
   instance_name = var.instance_name
   instance_type = var.instance_type
 
-<<<<<<< HEAD
-    subnet_id = module.vpc.subnet_id
-}
-=======
   subnet_id = module.vpc.public_subnet_id
 }
->>>>>>> 0759a57 (Day2: this is security group lab where we add public and private subnet)

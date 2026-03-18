@@ -11,8 +11,8 @@ resource "aws_vpc" "this" {
 
 resource "aws_subnet" "public" {
     vpc_id = aws_vpc.this.id
-    cidr_block = var.subnet_cidr
-    availability_zone =  var.availability_zone
+    cidr_block = var.public_subnet_cidr
+    availability_zone = var.availability_zone_public
 
     map_public_ip_on_launch = true
 
@@ -26,7 +26,7 @@ resource "aws_subnet" "public" {
 resource "aws_subnet" "private" {
     vpc_id = aws_vpc.this.id
     cidr_block = var.private_subnet_cidr
-    availability_zone = var.availability_zone
+    availability_zone = var.availability_zone_private
 
     tags = {
         Name = "private-subnet"
@@ -43,7 +43,43 @@ resource "aws_internet_gateway" "igw" {
     }
 }
 
-# here we are opening routetable for all internet
+# this is fr nat eip
+
+resource "aws_eip" "nat_eip"{
+    domain = "vpc"
+
+    tags = {
+        Name = "NAT-eip"
+    }
+}
+
+# this is for NAT gateway to connet private subnet with internet 
+
+resource "aws_nat_gateway" "nat"{
+    allocation_id = aws_eip.nat_eip.id
+    subnet_id = aws_subnet.public.id
+
+    tags ={
+        Name = "Terraform-NAT"
+    }
+depends_on = [ aws_internet_gateway.igw ]
+}
+
+#this route table for private subnet who are connecting with internet
+
+resource "aws_route_table" "private_rt" {
+    vpc_id = aws_vpc.this.id
+
+    route {
+        cidr_block = "0.0.0.0/0"
+        nat_gateway_id = aws_nat_gateway.nat.id
+        }
+
+    tags = {
+        Name = "private-route-table"
+    }
+}
+# here we are opening routetable for public route table all internet
 
 resource "aws_route_table" "public_rt" {
     vpc_id = aws_vpc.this.id
@@ -58,8 +94,15 @@ resource "aws_route_table" "public_rt" {
    }
 }
 
-# this is for route table assosiation: subnet connect internet
+# this is for route table assosiation:  for public subnet connect internet
 resource "aws_route_table_association" "assoc"{
-    subnet_id = aws_subnet.public.id
-    route_table_id = aws_route_table.public_rt.id
+   subnet_id = aws_subnet.public.id
+  route_table_id = aws_route_table.public_rt.id
+}
+
+# this association is for private subnet route table
+
+resource "aws_route_table_association" "private_assoc"{
+    subnet_id = aws_subnet.private.id
+    route_table_id = aws_route_table.private_rt.id
 }
