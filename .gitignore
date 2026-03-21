@@ -13,3 +13,8 @@ terraform.tfvars
 
 # OS files
 .DS_Store
+
+# SSH Keys
+keys/
+*.pem
+*.key
