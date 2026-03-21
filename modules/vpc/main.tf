@@ -43,7 +43,7 @@ resource "aws_internet_gateway" "igw" {
     }
 }
 
-# this is fr nat eip
+# this is fr nat Elastic IP 
 
 resource "aws_eip" "nat_eip"{
     domain = "vpc"
