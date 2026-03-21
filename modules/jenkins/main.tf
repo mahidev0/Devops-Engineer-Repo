@@ -13,6 +13,20 @@ resource "aws_instance" "jenkins" {
     Name = "jenkins-server"
   }
 }
+
+resource "aws_eip" "jenkins_eip" {
+  domain = "vpc"
+
+  tags = {
+    Name = "jenkins-eip"
+  }
+}
+resource "aws_eip_association" "jenkins_eip_assoc" {
+  instance_id   = aws_instance.jenkins.id
+  allocation_id = aws_eip.jenkins_eip.id
+}
+
+
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
