@@ -36,7 +36,6 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "artifacts_bucket_
     }
   }
 }
-
 resource "aws_s3_bucket_versioning" "artifacts_bucket_versioning" {
   count  = var.enable_versioning ? 1 : 0
   bucket = aws_s3_bucket.artifacts_bucket.id
@@ -44,4 +43,27 @@ resource "aws_s3_bucket_versioning" "artifacts_bucket_versioning" {
   versioning_configuration {
     status = "Enabled"
   }
+}
+# modules/s3/main.tf
+resource "aws_iam_policy" "jenkins_s3_policy" {
+  name   = "jenkins-s3-policy"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "s3:PutObject",
+          "s3:GetObject",
+          "s3:DeleteObject"
+        ]
+        Resource = "arn:aws:s3:::${aws_s3_bucket.artifacts_bucket.bucket}/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "jenkins_s3_attach" {
+  role       = var.aws_iam_role
+  policy_arn = aws_iam_policy.jenkins_s3_policy.arn
 }

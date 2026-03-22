@@ -21,3 +21,8 @@ variable "s3_buckets_arn" {
   type        = list(string)
   default     = []
 }
+
+variable "bucket_name" {
+  description = "The base name of the S3 bucket. Must be globally unique."
+  type        = string
+}

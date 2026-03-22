@@ -1,5 +1,5 @@
 resource "aws_iam_role" "jenkins_ec2_role" {
-  name = var.jenkins_ec2_role_name
+  name = "jenkins_ec2_role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
@@ -9,15 +9,17 @@ resource "aws_iam_role" "jenkins_ec2_role" {
     }]
   })
 }
-
+resource "random_id" "policy_suffix" {
+  byte_length = 4
+}
 resource "aws_iam_policy" "jenkins_s3_policy" {
-  name   = var.jenkins_s3_policy_name
+  name   = "jenkins-s3-policy-${random_id.policy_suffix.hex}"
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
       Effect   = "Allow"
       Action   = ["s3:GetObject","s3:PutObject","s3:ListBucket"]
-      Resource = var.s3_buckets_arn
+        Resource = "arn:aws:s3:::${var.bucket_name}/*"
     }]
   })
 }

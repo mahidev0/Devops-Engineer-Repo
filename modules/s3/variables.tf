@@ -24,3 +24,9 @@ variable "acl" {
   type        = string
   default     = "private"
 }
+
+variable "aws_iam_role" {
+  description = "IAM role to attach S3 policy"
+  type        = string
+}
+

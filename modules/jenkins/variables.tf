@@ -7,3 +7,7 @@ variable "iam_instance_profile" {
   description = "IAM instance profile to attach to Jenkins EC2"
   type        = string
 }
+variable "jenkins_role_name" {
+  type = string
+}
+

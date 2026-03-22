@@ -52,20 +52,21 @@ resource "aws_key_pair" "jenkins" {
 # ---------------- Jenkins ----------------
 module "jenkins" {
   source            = "./modules/jenkins"
-  ami = data.aws_ami.amazon_linux.id
+  ami = "ami-013cb19ee7faa9342"
   instance_type     = "t3.micro"
   public_subnet_id = module.vpc.public_subnet_id
   security_group_id = module.aws_security_group.jenkins_sg_id
   key_name          = aws_key_pair.jenkins.key_name
   iam_instance_profile   = module.iam.jenkins_instance_profile_name
+  jenkins_role_name = module.iam.jenkins_ec2_role_name
 
 }
-
 #---------------S3---------------
 module "s3" {
   source      = "./modules/s3"
   bucket_name = "mohini-jenkins-artifacts"
   enable_versioning = true
+  aws_iam_role = module.iam.jenkins_ec2_role_name  # <-- pass the IAM role here
   acl         = "private"
   tags = {
     Project = "Jenkins-CI"
@@ -78,6 +79,7 @@ module "s3" {
 module "iam" {
   source         = "./modules/iam"
   s3_buckets_arn = [module.s3.artifacts_bucket_arn]
+  bucket_name = module.s3.artifacts_bucket_name
 }
 
 
