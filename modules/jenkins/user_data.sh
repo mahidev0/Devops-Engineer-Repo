@@ -1,41 +1,55 @@
 #!/bin/bash
-# Update system
+set -ex
+
 dnf update -y
+dnf install -y java-17-amazon-corretto wget
 
-# Install Java
-dnf install java-17-amazon-corretto -y
-#wget install
-sudo dnf install wget -y
-
-#wget version check
-wget --version
-
-# Add Jenkins repo
+# Install Jenkins repo
 wget -O /etc/yum.repos.d/jenkins.repo \
 https://pkg.jenkins.io/redhat-stable/jenkins.repo
 
-rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io-2023.key
+rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+dnf install -y jenkins
 
-# Install Jenkins
-dnf install jenkins -y
+# ---- IMPORTANT PART ----
 
-# Enable & start Jenkins
+# Disable setup wizard BEFORE first start
+mkdir -p /etc/systemd/system/jenkins.service.d
+
+cat <<EOF > /etc/systemd/system/jenkins.service.d/override.conf
+[Service]
+Environment="JAVA_OPTS=-Djenkins.install.runSetupWizard=false"
+EOF
+
+systemctl daemon-reexec
+systemctl daemon-reload
+
+# Create init script BEFORE start
+mkdir -p /var/lib/jenkins/init.groovy.d
+
+cat <<'EOF' > /var/lib/jenkins/init.groovy.d/basic-security.groovy
+#!groovy
+
+import jenkins.model.*
+import hudson.security.*
+
+def instance = Jenkins.get()
+
+println("Creating admin user")
+
+def hudsonRealm = new HudsonPrivateSecurityRealm(false)
+hudsonRealm.createAccount("admin","Admin@123")
+instance.setSecurityRealm(hudsonRealm)
+
+def strategy = new FullControlOnceLoggedInAuthorizationStrategy()
+strategy.setAllowAnonymousRead(false)
+instance.setAuthorizationStrategy(strategy)
+
+instance.save()
+EOF
+
+chown -R jenkins:jenkins /var/lib/jenkins
+
+# NOW start Jenkins FIRST TIME
 systemctl enable jenkins
 systemctl start jenkins
-
-# Open firewall (if enabled)
-systemctl restart jenkins
-
-echo "Waiting for Jenkins to generate admin password..."
-
-# WAIT LOOP (VERY IMPORTANT)
-while [ ! -f /var/lib/jenkins/secrets/initialAdminPassword ]; do
-  sleep 15
-done
-
-echo "Password found. Uploading to S3..."
-
-aws s3 cp \
-/var/lib/jenkins/secrets/initialAdminPassword \
-s3://mohini-jenkins-artifacts-f8b50037/initialAdminPassword.txt \
---region ap-south-1
