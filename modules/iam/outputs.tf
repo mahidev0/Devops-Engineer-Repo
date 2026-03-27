@@ -1,3 +1,4 @@
+
 output "jenkins_ec2_role_arn" {
   value = aws_iam_role.jenkins_ec2_role.arn
 }

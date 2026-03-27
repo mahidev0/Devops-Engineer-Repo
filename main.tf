@@ -31,13 +31,12 @@ data "aws_ami" "amazon_linux" {
 }
 
 module "ec2" {
-  source = "./modules/ec2"
-  ami = data.aws_ami.amazon_linux.id
-  instance_name = var.instance_name
-  instance_type = var.instance_type
-  subnet_id     = module.vpc.public_subnet_id
-  iam_instance_profile  = module.iam.jenkins_instance_profile_name
-
+  source               = "./modules/ec2"
+  ami                  = data.aws_ami.amazon_linux.id
+  instance_name        = var.instance_name
+  instance_type        = var.instance_type
+  subnet_id            = module.vpc.public_subnet_id
+  iam_instance_profile = module.iam.jenkins_instance_profile_name
   vpc_security_group_ids = [
     module.aws_security_group.sg_id
   ]
@@ -51,23 +50,25 @@ resource "aws_key_pair" "jenkins" {
 
 # ---------------- Jenkins ----------------
 module "jenkins" {
-  source            = "./modules/jenkins"
-  ami = "ami-013cb19ee7faa9342"
-  instance_type     = "t3.micro"
-  public_subnet_id = module.vpc.public_subnet_id
-  security_group_id = module.aws_security_group.jenkins_sg_id
-  key_name          = aws_key_pair.jenkins.key_name
-  iam_instance_profile   = module.iam.jenkins_instance_profile_name
-  jenkins_role_name = module.iam.jenkins_ec2_role_name
+  source = "./modules/jenkins"
+
+  instance_id          = module.jenkins.instance_id
+  ami                  = "ami-013cb19ee7faa9342"
+  instance_type        = "t3.micro"
+  public_subnet_id     = module.vpc.public_subnet_id
+  security_group_id    = module.aws_security_group.jenkins_sg_id
+  key_name             = aws_key_pair.jenkins.key_name
+  iam_instance_profile = module.iam.jenkins_instance_profile_name
+  jenkins_role_name    = module.iam.jenkins_ec2_role_name
 
 }
 #---------------S3---------------
 module "s3" {
-  source      = "./modules/s3"
-  bucket_name = "mohini-jenkins-artifacts"
+  source            = "./modules/s3"
+  bucket_name       = "mohini-jenkins-artifacts"
   enable_versioning = true
-  aws_iam_role = module.iam.jenkins_ec2_role_name  # <-- pass the IAM role here
-  acl         = "private"
+  aws_iam_role      = module.iam.jenkins_ec2_role_name # <-- pass the IAM role here
+  acl               = "private"
   tags = {
     Project = "Jenkins-CI"
     Owner   = "DevOpsTeam"
@@ -79,7 +80,20 @@ module "s3" {
 module "iam" {
   source         = "./modules/iam"
   s3_buckets_arn = [module.s3.artifacts_bucket_arn]
-  bucket_name = module.s3.artifacts_bucket_name
+  bucket_name    = module.s3.artifacts_bucket_name
+}
+
+
+#----------------CloudWatch ----------------------
+module "cloudwatch" {
+  source = "./modules/cloudwatch"
+
+  instance_ids = [
+    module.ec2.instance_id,
+    module.jenkins.instance_id
+  ]
+
+  alarm_email = "mahikashyap799@gmail.com"
 }
 
 

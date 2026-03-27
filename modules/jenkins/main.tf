@@ -28,9 +28,9 @@ resource "aws_instance" "jenkins" {
 
 resource "aws_eip" "jenkins_eip" {
   domain = "vpc"
-  lifecycle {
-    prevent_destroy = true
-  }
+ # lifecycle {
+  #  prevent_destroy = true
+  #}
   tags = {
     Name = "jenkins-eip"
   }
@@ -38,7 +38,7 @@ resource "aws_eip" "jenkins_eip" {
 
 resource "aws_eip_association" "jenkins_eip_assoc" {
   instance_id   = aws_instance.jenkins.id
-  allocation_id = "eipalloc-0c83a6527ec751b0b"
+ allocation_id = aws_eip.jenkins_eip.id
 }
 
 

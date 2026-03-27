@@ -33,3 +33,13 @@ resource "aws_iam_instance_profile" "jenkins_instance_profile" {
   name = var.jenkins_instance_profile_name
   role = aws_iam_role.jenkins_ec2_role.name
 }
+
+#Adding cloudwatch 
+
+
+
+# CloudWatch Agent Permission
+resource "aws_iam_role_policy_attachment" "cloudwatch_agent_attach" {
+  role       = aws_iam_role.jenkins_ec2_role.name
+  policy_arn = "arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy"
+}

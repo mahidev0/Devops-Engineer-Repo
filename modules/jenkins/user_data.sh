@@ -22,7 +22,21 @@ Environment="JAVA_OPTS=-Djenkins.install.runSetupWizard=false"
 EOF
 
 systemctl daemon-reexec
-systemctl daemon-reload
+systemctl enable jenkins
+
+# Wait for Jenkins files to be ready
+sleep 30
+
+# Install recommended plugins
+jenkins-plugin-cli --plugins \
+git \
+workflow-aggregator \
+pipeline-stage-view \
+docker-workflow \
+aws-credentials \
+blueocean \
+configuration-as-code \
+cloudbees-folder
 
 # Create init script BEFORE start
 mkdir -p /var/lib/jenkins/init.groovy.d
@@ -51,5 +65,10 @@ EOF
 chown -R jenkins:jenkins /var/lib/jenkins
 
 # NOW start Jenkins FIRST TIME
-systemctl enable jenkins
+systemctl daemon-reload
 systemctl start jenkins
+
+# Wait until Jenkins creates directories
+sleep 90
+
+systemctl stop jenkins

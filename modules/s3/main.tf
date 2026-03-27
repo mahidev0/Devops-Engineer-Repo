@@ -20,6 +20,8 @@ resource "random_id" "bucket_suffix" {
 
 resource "aws_s3_bucket" "artifacts_bucket" {
   bucket = "${var.bucket_name}-${random_id.bucket_suffix.hex}"
+ 
+  #force_destroy = true
 
   tags = merge(
     { Name = var.bucket_name, Environment = "DevOpsProject" },
